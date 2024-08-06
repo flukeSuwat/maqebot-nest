@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProductDTO } from 'src/dto/product.dto';
+import { ProductDTO } from 'src/product/dto/product.dto';
 @Injectable()
 export class ProductService {
   private products: ProductDTO[] = [
