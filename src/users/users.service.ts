@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -12,21 +13,31 @@ export class UsersService {
     private userRepository: Repository<User>,
   ) {}
 
+  async findOneUsername(username: string): Promise<User | undefined> {
+    return await this.userRepository.findOne({ where: { username } });
+  }
+  
   async create(createUserDto: CreateUserDto) {
-    const user = await this.userRepository.create(createUserDto);
-    const toCreate = await this.userRepository.insert(user);
-    return toCreate;
+    const { password, ...rest } = createUserDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = this.userRepository.create({
+      ...rest,
+      password: hashedPassword,
+    });
+
+    return await this.userRepository.save(newUser);
   }
 
   async findAll() {
     return await this.userRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return await this.userRepository.findOneBy({ id: id });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
     let user = await this.userRepository.findOneBy({ id: id });
     user = {
       ...user,
@@ -36,7 +47,7 @@ export class UsersService {
     return toUpdate;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     return await this.userRepository.delete(id);
   }
 }
